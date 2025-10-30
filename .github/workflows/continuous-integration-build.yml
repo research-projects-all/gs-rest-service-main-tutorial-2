@@ -106,4 +106,60 @@ jobs:
         with:
           category: "/language:java"
 
+  sonarcloud:
+    name: SonarCloud (repo-wide)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: 'maven'
+
+      # Build Java modules (Maven)
+      - name: Build Java modules
+        run: |
+          mvn -B -f initial/pom.xml -DskipTests clean package
+          mvn -B -f complete/pom.xml -DskipTests clean package
+
+      # Build Kotlin modules (Gradle)
+      - name: Build Kotlin modules
+        run: |
+          if [ -x "./initial-kotlin/gradlew" ]; then
+            (cd initial-kotlin && ./gradlew build -x test)
+          else
+            gradle -p initial-kotlin build -x test
+          fi
+          if [ -x "./complete-kotlin/gradlew" ]; then
+            (cd complete-kotlin && ./gradlew build -x test)
+          else
+            gradle -p complete-kotlin build -x test
+          fi
+
+      - name: SonarCloud Scan (single project)
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectBaseDir: .
+          args: >
+            -Dsonar.host.url=https://sonarcloud.io
+            -Dsonar.organization=research-projects-all
+            -Dsonar.projectKey=research-projects-all_gs-rest-service-main-tutorial-2
+            -Dsonar.sources=initial/src/main,complete/src/main,initial-kotlin/src/main,complete-kotlin/src/main
+            -Dsonar.tests=initial/src/test,complete/src/test,initial-kotlin/src/test,complete-kotlin/src/test
+            -Dsonar.java.binaries=initial/target/classes,complete/target/classes,initial-kotlin/build/classes/java/main,initial-kotlin/build/classes/kotlin/main,complete-kotlin/build/classes/java/main,complete-kotlin/build/classes/kotlin/main
+            -Dsonar.java.test.binaries=initial/target/test-classes,complete/target/test-classes,initial-kotlin/build/classes/java/test,initial-kotlin/build/classes/kotlin/test,complete-kotlin/build/classes/java/test,complete-kotlin/build/classes/kotlin/test
+
+
   
