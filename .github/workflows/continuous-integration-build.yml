@@ -145,25 +145,4 @@ jobs:
             gradle -p complete-kotlin build -x test
           fi
 
-      # Single SonarCloud analysis including all four folders
-      - name: SonarCloud Scan (single project)
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          projectBaseDir: .
-          args: >
-            -Dsonar.host.url=https://sonarcloud.io
-            -Dsonar.organization=research-projects-all
-            -Dsonar.projectKey=research-projects-all_gs-rest-service-main-tutorial-2
-            -Dsonar.sources=initial/src/main,complete/src/main,initial-kotlin/src/main,complete-kotlin/src/main
-            -Dsonar.tests=initial/src/test,complete/src/test,initial-kotlin/src/test,complete-kotlin/src/test
-            -Dsonar.java.binaries=initial/target/classes,complete/target/classes,
-            initial-kotlin/build/classes/java/main,initial-kotlin/build/classes/kotlin/main,
-            complete-kotlin/build/classes/java/main,complete-kotlin/build/classes/kotlin/main
-            -Dsonar.java.test.binaries=initial/target/test-classes,complete/target/test-classes,
-            initial-kotlin/build/classes/java/test,initial-kotlin/build/classes/kotlin/test,
-            complete-kotlin/build/classes/java/test,complete-kotlin/build/classes/kotlin/test
-            # (Optional) Add coverage when you wire reports below:
-            # -Dsonar.coverage.jacoco.xmlReportPaths=initial/target/site/jacoco/jacoco.xml,complete/target/site/jacoco/jacoco.xml,initial-kotlin/build/reports/jacoco/test/jacocoTestReport.xml,complete-kotlin/build/reports/jacoco/test/jacocoTestReport.xml
+      
