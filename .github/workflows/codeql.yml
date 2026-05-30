@@ -1,0 +1,58 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  analyze:
+    name: Analyze Java/Kotlin
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+            project-dir: complete
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          source-root: ${{ matrix.project-dir }}
+
+      - name: Build Spring Boot project
+        working-directory: ${{ matrix.project-dir }}
+        run: |
+          if [ -f "./mvnw" ]; then
+            chmod +x ./mvnw
+            ./mvnw clean package -DskipTests
+          elif [ -f "./gradlew" ]; then
+            chmod +x ./gradlew
+            ./gradlew build -x test
+          elif [ -f "pom.xml" ]; then
+            mvn clean package -DskipTests
+          elif [ -f "build.gradle" ] || [ -f "build.gradle.kts" ]; then
+            gradle build -x test
+          else
+            echo "No Maven or Gradle build file found in ${{ matrix.project-dir }}"
+            exit 1
+          fi
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
